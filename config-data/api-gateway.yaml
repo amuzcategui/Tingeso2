@@ -3,12 +3,25 @@ server:
 
 eureka:
   client:
+    fetch-registry: true
+    register-with-eureka: true
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: http://eureka-server-service:8761/eureka/
 
 spring:
   cloud:
     gateway:
+      discovery:
+        locator:
+          enabled: true
+        default-filters:
+          - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: '*'
+            allowedMethods: "*"
+            allowedHeaders: "*"
       routes:
         - id: customer
           uri: lb://customer-service
