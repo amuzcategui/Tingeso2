@@ -1,0 +1,40 @@
+server:
+  port: 8080
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: customer
+          uri: lb://customer-service
+          predicates:
+            - Path=/api/customers/**
+        - id: inventory
+          uri: lb://inventory-service
+          predicates:
+            - Path=/api/tools/**
+        - id: loan
+          uri: lb://loan-service
+          predicates:
+            - Path=/api/loans/**
+        - id: kardex
+          uri: lb://kardex-service
+          predicates:
+            - Path=/api/kardex/**
+        - id: pricing
+          uri: lb://pricing-service
+          predicates:
+            - Path=/api/pricing/**
+        - id: reporting
+          uri: lb://reporting-service
+          predicates:
+            - Path=/api/reports/**
+        - id: user
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
