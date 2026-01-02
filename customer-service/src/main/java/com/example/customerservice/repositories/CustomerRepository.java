@@ -12,7 +12,9 @@ import java.util.Optional;
 @Repository
 public interface CustomerRepository extends JpaRepository<CustomerEntity, Long> {
     Optional<CustomerEntity> findByrut(String rut);
+    public CustomerEntity findByRutI(String rut);
     List<CustomerEntity> findAll();
     List<CustomerEntity> findBystatus(String status);
     List<CustomerEntity> findByname(String name);
+    List<CustomerEntity> findByquantityLoansGreaterThan(int loans);
 }

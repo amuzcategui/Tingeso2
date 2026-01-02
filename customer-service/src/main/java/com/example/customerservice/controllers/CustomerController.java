@@ -2,8 +2,10 @@ package com.example.customerservice.controllers;
 
 import com.example.customerservice.entities.CustomerEntity;
 import com.example.customerservice.services.CustomerService;
+import com.example.customerservice.repositories.CustomerRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +18,7 @@ import java.util.List;
 public class CustomerController {
 
     private final CustomerService customerService;
+    CustomerRepository customerRepository;
 
     public CustomerController(CustomerService customerService) {
         this.customerService = customerService;
@@ -90,4 +93,31 @@ public class CustomerController {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
+
+    // NO SE SI DEJAN ACÁ
+
+    @GetMapping("/findCustomer")
+
+    public ResponseEntity<?> findByRut(@RequestParam String rut) {
+        try {
+            CustomerEntity customer = customerRepository.findByRutI(rut);
+            return ResponseEntity.ok(customer);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // clients with overdue, NO LO ESTOY DEJANDO ACÁ
+
+    @GetMapping("/allGreatherThan")
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    public ResponseEntity<?> customerGreatherThan(@RequestParam int quantity) {
+        try {
+            List<CustomerEntity> customers = customerRepository.findByquantityLoansGreaterThan(quantity);
+            return ResponseEntity.ok(customers);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 }

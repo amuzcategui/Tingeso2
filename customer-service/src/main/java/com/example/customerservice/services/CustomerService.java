@@ -4,6 +4,7 @@ import com.example.customerservice.repositories.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -14,6 +15,8 @@ public class CustomerService {
 
     @Autowired
     private CustomerRepository customerRepository;
+    @Autowired
+    private RestTemplate restTemplate;
 
     public CustomerEntity createCustomer(CustomerEntity customer) {
         if (customer.getName() != null &&

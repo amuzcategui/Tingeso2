@@ -1,4 +1,4 @@
-package com.example.customerservice.config;
+package com.example.inventoryservice.config;
 
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
