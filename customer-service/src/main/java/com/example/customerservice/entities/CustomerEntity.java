@@ -25,10 +25,10 @@ public class CustomerEntity {
     private String name;
     private String email;
     private String rut;
-    //private String password;
+    private String password;
     private String phone;
     private LocalDate birthDate;
     private boolean admin;
     private String status;
-    //private int quantityLoans;
+    private int quantityLoans;
 }

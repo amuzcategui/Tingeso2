@@ -84,5 +84,16 @@ public class CustomerService {
         });
     }
 
+    public CustomerEntity updateQuantityLoans(String rut, int delta) {
+        CustomerEntity customer = findByRutOrThrow(rut);
+
+        int newValue = customer.getQuantityLoans() + delta;
+        if (newValue < 0) newValue = 0; // para no quedar negativo
+
+        customer.setQuantityLoans(newValue);
+        return customerRepository.save(customer);
+    }
+
+
 }
 

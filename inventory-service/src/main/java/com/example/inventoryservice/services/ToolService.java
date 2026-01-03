@@ -310,6 +310,13 @@ public class ToolService {
         return toolRepository.save(tool);
     }
 
+    @Transactional(readOnly = true)
+    public List<ToolEntity> searchByName(String name) {
+        if (name == null || name.isBlank()) throw new IllegalArgumentException("name es requerido");
+        return toolRepository.findByname(name);
+    }
+
+
 
 
 }

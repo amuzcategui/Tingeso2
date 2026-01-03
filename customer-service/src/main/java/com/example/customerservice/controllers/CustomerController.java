@@ -3,6 +3,7 @@ package com.example.customerservice.controllers;
 import com.example.customerservice.entities.CustomerEntity;
 import com.example.customerservice.services.CustomerService;
 import com.example.customerservice.repositories.CustomerRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,7 +18,9 @@ import java.util.List;
 @CrossOrigin("*")
 public class CustomerController {
 
-    private final CustomerService customerService;
+    @Autowired
+    CustomerService customerService;
+    @Autowired
     CustomerRepository customerRepository;
 
     public CustomerController(CustomerService customerService) {
@@ -119,5 +122,21 @@ public class CustomerController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    // 6) Actualizar cantidad de préstamos (delta)
+// PUT /api/v1/customer/{rut}/loans?delta=1
+// PUT /api/v1/customer/{rut}/loans?delta=-1
+    @PutMapping("/{rut}/loans")
+    public ResponseEntity<?> updateLoans(@PathVariable String rut, @RequestParam int delta) {
+        try {
+            CustomerEntity updated = customerService.updateQuantityLoans(rut, delta);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 
 }

@@ -117,5 +117,15 @@ public class ToolController {
         }
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<?> searchByName(@RequestParam String name) {
+        try {
+            return ResponseEntity.ok(toolService.searchByName(name));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+
 
 }
