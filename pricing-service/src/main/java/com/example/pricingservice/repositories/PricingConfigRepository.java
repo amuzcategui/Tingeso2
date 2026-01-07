@@ -8,8 +8,6 @@ import java.util.List;
 
 @Repository
 public interface PricingConfigRepository extends JpaRepository<PricingConfigEntity,Long> {
-    public List<PricingConfigEntity> findByToolValueEquals(String toolValue);
-    public List<PricingConfigEntity> findByToolValueGreaterThanEqual(String toolValue);
-    public List<PricingConfigEntity> findByToolValueLessThanEqual(String toolValue);
+    
     public List<PricingConfigEntity> findAll();
 }

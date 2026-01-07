@@ -22,5 +22,5 @@ public class PricingConfigEntity {
     // RF4.2 Tarifa diaria de multa por atraso (GENERAL)
     private double lateFeeDaily;
 
-    // opcional: si quieres cobrar reposición por baja, el toolValue viene desde inventory por tool (RF4.3)
+    // si quieres cobrar reposición por baja, el toolValue viene desde inventory por tool (RF4.3)
 }
