@@ -42,7 +42,7 @@ public class LoanController {
     @PutMapping("/return/{idLoan}")
     public ResponseEntity<?> returnTools(
             @PathVariable long idLoan,
-            @RequestParam(defaultValue = "0") double dailyLateFee, // ya no se usa en Service, pero se deja
+            @RequestParam(defaultValue = "0") double dailyLateFee,
             @RequestParam(defaultValue = "0") double repairCost,
             @RequestParam(value = "damaged", required = false) List<String> damagedTools,
             @RequestParam(value = "discarded", required = false) List<String> discardedTools
@@ -60,6 +60,7 @@ public class LoanController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
 
     @PutMapping("/{idLoan}/pay")
     public ResponseEntity<?> payLoan(@PathVariable long idLoan) {

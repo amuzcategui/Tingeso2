@@ -138,5 +138,15 @@ public class CustomerController {
         }
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllCustomers() {
+        try {
+            List<CustomerEntity> customers = customerRepository.findAll();
+            return ResponseEntity.ok(customers);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 
 }

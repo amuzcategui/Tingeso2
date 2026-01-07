@@ -34,15 +34,12 @@ public class LoanService {
     private static final String INV_DEACTIVATE     = INVENTORY_BASE + "/{idTool}/deactivate?rutPerson={rut}&quantity={quantity}";
 
     // ---------- Pricing endpoints ----------
-    private static final String PRICE_CALC_LOAN    = PRICING_BASE + "/calculate/loan";
-    private static final String PRICE_CALC_LATEFEE = PRICING_BASE + "/calculate/late-fee";
+    private static final String PRICE_RENTAL_FEE_DAILY = PRICING_BASE + "/rental-fee-daily";
 
     // ---------- Customer endpoints ----------
-    // En tu CustomerController YA tienes:
-    // GET /api/v1/customer/{rut}
-    // PUT /api/v1/customer/{rut}/loans?delta=1
-    private static final String CUST_GET_BY_RUT     = CUSTOMER_BASE + "/{rut}";
-    private static final String CUST_UPDATE_LOANS   = CUSTOMER_BASE + "/{rut}/loans?delta={delta}";
+    private static final String CUST_GET_BY_RUT   = CUSTOMER_BASE + "/{rut}";
+    private static final String CUST_UPDATE_LOANS = CUSTOMER_BASE + "/{rut}/loans?delta={delta}";
+    private static final String CUST_SET_STATUS   = CUSTOMER_BASE + "/{rut}/status?status={status}";
 
     // =========================================================================
     //  CUSTOMER helpers (JSON Map)
@@ -71,10 +68,65 @@ public class LoanService {
         }
     }
 
-    private void validateCustomerActive(Map<String, Object> customerJson) {
-        String status = String.valueOf(customerJson.getOrDefault("status", ""));
-        if (!"Activo".equalsIgnoreCase(status)) {
-            throw new IllegalArgumentException("El cliente no está activo");
+    private void customerSetStatus(String rut, String status) {
+        try {
+            restTemplate.exchange(CUST_SET_STATUS, HttpMethod.PUT, null, Object.class, rut, status);
+        } catch (Exception e) {
+            throw new RuntimeException("No se pudo actualizar status en customer-service", e);
+        }
+    }
+
+    private int getCustomerQuantityLoans(Map<String, Object> customerJson) {
+        try {
+            return Integer.parseInt(String.valueOf(customerJson.getOrDefault("quantityLoans", "0")));
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Actualiza status en customer-service usando:
+     * - overdue activo OR deuda impaga OR quantityLoans >= 5 => Restringido
+     * - si no => Activo
+     */
+    private void syncCustomerStatus(String rut) {
+        Map<String, Object> customer = customerGetOrThrow(rut);
+        int qLoans = getCustomerQuantityLoans(customer);
+
+        boolean hasOverdue = loanRepository
+                .existsByRutCustomerAndEndDateIsNullAndDueDateBefore(rut, LocalDate.now());
+
+        boolean hasUnpaid = loanRepository
+                .existsByRutCustomerAndPaidIsFalseAndEndDateNotNull(rut);
+
+        if (hasOverdue || hasUnpaid || qLoans >= 5) {
+            customerSetStatus(rut, "Restringido");
+        } else {
+            customerSetStatus(rut, "Activo");
+        }
+    }
+
+    /**
+     * Bloquea creación de préstamo si:
+     * - overdue activo OR deuda impaga OR quantityLoans >= 5
+     * Además intenta dejar el status como Restringido para consistencia.
+     */
+    private void validateCustomerAllowedToLoan(String rut) {
+        Map<String, Object> customer = customerGetOrThrow(rut);
+        int qLoans = getCustomerQuantityLoans(customer);
+
+        boolean hasOverdue = loanRepository
+                .existsByRutCustomerAndEndDateIsNullAndDueDateBefore(rut, LocalDate.now());
+
+        boolean hasUnpaid = loanRepository
+                .existsByRutCustomerAndPaidIsFalseAndEndDateNotNull(rut);
+
+        if (hasOverdue || hasUnpaid || qLoans >= 5) {
+            try { customerSetStatus(rut, "Restringido"); } catch (Exception ignored) {}
+            if (qLoans >= 5) {
+                throw new IllegalArgumentException("El cliente no puede tener más de 5 préstamos activos");
+            }
+            throw new IllegalArgumentException("El cliente no está activo (tiene atrasos o deudas sin pagar)");
         }
     }
 
@@ -128,40 +180,16 @@ public class LoanService {
     }
 
     // =========================================================================
-    //  PRICING helpers
+    //  PRICING helper (SOLO rentalFeeDaily)
     // =========================================================================
 
-    private double pricingCalculateLoan(int days) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("days", days);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Map<String, Object>> req = new HttpEntity<>(body, headers);
-
+    private double pricingGetRentalFeeDaily() {
         try {
-            ResponseEntity<Double> resp = restTemplate.exchange(PRICE_CALC_LOAN, HttpMethod.POST, req, Double.class);
+            ResponseEntity<Double> resp = restTemplate.getForEntity(PRICE_RENTAL_FEE_DAILY, Double.class);
             if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) return resp.getBody();
-            throw new RuntimeException("pricing-service no devolvió rentalFee");
+            throw new RuntimeException("pricing-service no devolvió rentalFeeDaily");
         } catch (Exception e) {
-            throw new RuntimeException("No se pudo calcular rentalFee en pricing-service", e);
-        }
-    }
-
-    private double pricingCalculateLateFee(int lateDays) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("lateDays", lateDays);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Map<String, Object>> req = new HttpEntity<>(body, headers);
-
-        try {
-            ResponseEntity<Double> resp = restTemplate.exchange(PRICE_CALC_LATEFEE, HttpMethod.POST, req, Double.class);
-            if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) return resp.getBody();
-            return 0.0;
-        } catch (Exception e) {
-            throw new RuntimeException("No se pudo calcular lateFine en pricing-service", e);
+            throw new RuntimeException("No se pudo obtener rentalFeeDaily en pricing-service", e);
         }
     }
 
@@ -192,6 +220,24 @@ public class LoanService {
     }
 
     // =========================================================================
+    //  Cálculos
+    // =========================================================================
+
+    private double calculateFee(LocalDate startDate, LocalDate dueDate, double rentalDailyFee) {
+        double totalDays = ChronoUnit.DAYS.between(startDate, dueDate);
+        return totalDays * rentalDailyFee;
+    }
+
+    private double calculateLateFee(LocalDate dueDate, LocalDate endDate, double dailyLateFee) {
+        double latefee = 0;
+        if (dueDate != null && endDate.isAfter(dueDate)) {
+            double totalDaysLate = ChronoUnit.DAYS.between(dueDate, endDate);
+            latefee = totalDaysLate * dailyLateFee;
+        }
+        return latefee;
+    }
+
+    // =========================================================================
     //  FIRMAS EXACTAS
     // =========================================================================
 
@@ -211,15 +257,8 @@ public class LoanService {
         int days = (int) ChronoUnit.DAYS.between(startDate, dueDate);
         if (days < 1) throw new IllegalArgumentException("El arriendo debe ser mayor a un día");
 
-        // ✅ 1) validar cliente existe + activo (equivalente a tu monolito)
-        Map<String, Object> customer = customerGetOrThrow(rutCustomer);
-        validateCustomerActive(customer);
-
-        boolean hasOverdue = loanRepository.existsByRutCustomerAndEndDateIsNullAndDueDateBefore(rutCustomer, LocalDate.now());
-        boolean hasUnpaid  = loanRepository.existsByRutCustomerAndPaidIsFalseAndEndDateNotNull(rutCustomer);
-        if (hasOverdue || hasUnpaid) {
-            throw new IllegalArgumentException("El cliente no está activo (tiene atrasos o deudas sin pagar)");
-        }
+        // ✅ validación completa (atrasos / deudas / límite 5)
+        validateCustomerAllowedToLoan(rutCustomer);
 
         List<Long> loanedToolIds = new ArrayList<>();
         List<String> namesForLoan = new ArrayList<>();
@@ -248,11 +287,15 @@ public class LoanService {
                 namesForLoan.add(toolName);
             }
 
-            // rentalFee desde pricing-service
-            double rentalFee = pricingCalculateLoan(days);
+            // fee global por préstamo
+            double rentalFeeDaily = pricingGetRentalFeeDaily();
+            double totalRentalFee = calculateFee(startDate, dueDate, rentalFeeDaily);
 
-            // ✅ 2) actualizar quantityLoans +1 (equivalente a customer.setQuantityLoans+save)
+            // actualizar quantityLoans +1
             customerUpdateLoans(rutCustomer, +1);
+
+            // ✅ sincronizar status (si llega a 5, queda Restringido; si no y sin deudas/atrasos, Activo)
+            syncCustomerStatus(rutCustomer);
 
             loan.setRutCustomer(rutCustomer);
             loan.setToolNames(namesForLoan);
@@ -260,7 +303,7 @@ public class LoanService {
             loan.setDueDate(dueDate);
             loan.setEndDate(null);
             loan.setFine(0.0);
-            loan.setRentalFee(rentalFee);
+            loan.setRentalFee(totalRentalFee);
             loan.setPaid(false);
 
             return loanRepository.save(loan);
@@ -277,8 +320,8 @@ public class LoanService {
     @Transactional
     public LoanEntity returnTools(
             long idLoan,
-            double dailyLateFee,   // firma exacta, ya NO se usa (lateFine viene de pricing-service)
-            double repairCost,     // firma exacta
+            double dailyLateFee,
+            double repairCost,
             List<String> damaged,
             List<String> discarded
     ) {
@@ -298,14 +341,9 @@ public class LoanService {
 
         loan.setEndDate(endDate);
 
-        int lateDays = 0;
-        if (dueDate != null && endDate.isAfter(dueDate)) {
-            lateDays = (int) ChronoUnit.DAYS.between(dueDate, endDate);
-        }
-
-        // lateFine desde pricing-service
-        double lateFine = pricingCalculateLateFee(lateDays);
-        loan.setFine(lateFine);
+        // multa calculada con dailyLateFee recibido
+        double lateFee = calculateLateFee(dueDate, endDate, dailyLateFee);
+        loan.setFine(lateFee);
 
         for (String toolName : loan.getToolNames()) {
 
@@ -335,8 +373,11 @@ public class LoanService {
             }
         }
 
-        // ✅ 3) actualizar quantityLoans -1
+        // actualizar quantityLoans -1
         customerUpdateLoans(rutCustomer, -1);
+
+        // ✅ sincronizar status (si bajó de 5 y no tiene deudas/atrasos, Activo)
+        syncCustomerStatus(rutCustomer);
 
         return loanRepository.save(loan);
     }
@@ -345,8 +386,14 @@ public class LoanService {
     public LoanEntity markLoanAsPaid(long idLoan) {
         LoanEntity loan = loanRepository.findByid(idLoan);
         if (loan == null) throw new IllegalArgumentException("Préstamo no encontrado");
+
         loan.setPaid(true);
-        return loanRepository.save(loan);
+        LoanEntity saved = loanRepository.save(loan);
+
+        // ✅ al pagar puede quitarse la restricción por deuda
+        syncCustomerStatus(saved.getRutCustomer());
+
+        return saved;
     }
 
     @Transactional
@@ -380,7 +427,6 @@ public class LoanService {
     @Transactional
     public Map<String, List<LoanEntity>> listActiveLoansGrouped(LocalDate from, LocalDate to) {
         LocalDate today = LocalDate.now();
-
         List<LoanEntity> active = listActiveLoans(from, to);
 
         List<LoanEntity> overdue = new ArrayList<>();

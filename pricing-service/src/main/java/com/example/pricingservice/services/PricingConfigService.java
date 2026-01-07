@@ -29,7 +29,6 @@ public class PricingConfigService {
         if (all.isEmpty()) {
             PricingConfigEntity cfg = new PricingConfigEntity();
             cfg.setRentalFeeDaily(0);
-            cfg.setLateFeeDaily(0);
             return pricingConfigRepository.save(cfg);
         }
         return all.get(0);
@@ -48,6 +47,11 @@ public class PricingConfigService {
         return getOrCreateConfig();
     }
 
+    @Transactional(readOnly = true)
+    public double getRentalFeeDailyValue() {
+        return getOrCreateConfig().getRentalFeeDaily();
+    }
+
     @Transactional
     public PricingConfigEntity updateRentalFeeDaily(double newValue) {
         if (newValue < 0) throw new IllegalArgumentException("rentalFeeDaily inválido");
@@ -56,17 +60,10 @@ public class PricingConfigService {
         return pricingConfigRepository.save(cfg);
     }
 
-    @Transactional
-    public PricingConfigEntity updateLateFeeDaily(double newValue) {
-        if (newValue < 0) throw new IllegalArgumentException("lateFeeDaily inválido");
-        PricingConfigEntity cfg = getOrCreateConfig();
-        cfg.setLateFeeDaily(newValue);
-        return pricingConfigRepository.save(cfg);
-    }
-
     // ------------------ RF4.3 Valor reposición por herramienta (inventory-service) ------------------
 
     @Transactional
+    @SuppressWarnings("unchecked")
     public Map<String, Object> updateToolValue(Long idTool, double newToolValue) {
         if (idTool == null) throw new IllegalArgumentException("idTool es requerido");
         if (newToolValue <= 0) throw new IllegalArgumentException("toolValue inválido");
@@ -78,35 +75,5 @@ public class PricingConfigService {
 
         ResponseEntity<Map> res = restTemplate.exchange(url, HttpMethod.PUT, jsonEntity(body), Map.class);
         return (Map<String, Object>) res.getBody();
-    }
-
-    // ------------------ Cálculos para loan-service ------------------
-
-    @Transactional(readOnly = true)
-    public Map<String, Object> calculateLoanPrice(int days) {
-        if (days <= 0) throw new IllegalArgumentException("days debe ser > 0");
-
-        PricingConfigEntity cfg = getOrCreateConfig();
-        double total = cfg.getRentalFeeDaily() * days;
-
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("days", days);
-        resp.put("rentalFeeDaily", cfg.getRentalFeeDaily());
-        resp.put("totalRental", total);
-        return resp;
-    }
-
-    @Transactional(readOnly = true)
-    public Map<String, Object> calculateLateFee(int lateDays) {
-        if (lateDays <= 0) throw new IllegalArgumentException("lateDays debe ser > 0");
-
-        PricingConfigEntity cfg = getOrCreateConfig();
-        double total = cfg.getLateFeeDaily() * lateDays;
-
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("lateDays", lateDays);
-        resp.put("lateFeeDaily", cfg.getLateFeeDaily());
-        resp.put("totalLateFee", total);
-        return resp;
     }
 }

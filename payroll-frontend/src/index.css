@@ -1,0 +1,338 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #E1E2EF;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #b497d6;
+}
+
+body {
+  margin: 0;
+}
+
+.MuiTypography-root.navbar-title {
+  
+  font-weight: bold;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  font-family: sans-serif,  Arial;
+
+  
+}
+
+
+.tools-table {
+  width: 100%;
+  margin-top: 2rem;
+  border-collapse: collapse; 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+
+}
+
+/* diseño de tabla */
+.tools-table th,
+.tools-table td {
+  padding: 12px 15px;
+  border: 1px solid #52154E; 
+  text-align: left;
+  background-color: white;
+  color:black;
+  
+}
+
+.tools-table th {
+  background-color: #b497d6; 
+  color: black;
+  font-weight: bold;
+}
+
+
+.tools-table tr:nth-of-type(even) {
+  background-color: #333;
+}
+
+/* diseño de input*/
+input{
+  border-radius: 8px;
+  border: 2px solid #bb0a21;
+  padding: 0.6em 6.2em;
+  font-size: 1.1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #b497d6;
+  color: #52154E;
+  margin-bottom: 20px;
+  transition: border-color 0.25s, box-shadow 0.25s;
+  width: 300px;
+  align-content: center;
+  text-align: center;
+}
+
+/* diseño del placeholder*/
+.search-input::placeholder {
+  color: #52154E;           
+  opacity: 1;             
+  
+}
+
+
+.search-wrap{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.search-input-smaller{
+  border-radius: 8px;
+  border: 2px solid #bb0a21;
+  padding: 0.6em 1.2em;
+  font-size: 1.1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #b497d6;
+  color: #52154E;
+  margin-bottom: 20px;
+  transition: border-color 0.25s, box-shadow 0.25s;
+  width: 215px;
+  align-content: center;
+  margin-right: 10px;
+}
+
+.date-smaller{
+  border-radius: 8px;
+  border: 2px solid #bb0a21;
+  padding: 0.6em 1.2em;
+  font-size: 1.1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #b497d6;
+  color: #52154E;
+  margin-bottom: 20px;
+  transition: border-color 0.25s, box-shadow 0.25s;
+  width: 160px;
+  align-content: center;
+  text-align: center;
+  margin-right: 10px;
+}
+
+/* diseño del form del kardex*/
+formControl{
+  border-radius: 8px;
+  border: 2px solid #bb0a21;
+  padding: 0.6em 1.2em;
+  font-size: 1.1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #b497d6;
+  color: #52154E;
+  margin-bottom: 20px;
+  transition: border-color 0.25s, box-shadow 0.25s;
+  width: 10px;
+  align-content: center;
+  text-align: center;
+}
+
+/* diseño de */
+.report-content{
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  align-content: center;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+
+}
+
+/* diseño de ventana de agregar tool*/
+.addTool{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #E1E2EF;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 400px;
+}
+
+/* color de letras*/
+h1 {
+  font-size: 4.2em;
+  line-height: 1.1;
+  font-family:  monospace,  'Brush Script MT';
+  text-align: center;
+  color:#BB0A21;
+}
+
+/* color de letras*/
+h2{
+  font-size: 2.5em;
+  line-height: 1.1;
+  font-family: Vegur, 'PT Sans', Verdana, sans-serif;
+  text-align: center;
+  color:#BB0A21;
+}
+
+/* color de letras*/
+p{
+  font-size: 1.2em;
+  line-height: 1.5;
+  font-family: Vegur, 'PT Sans', Verdana, sans-serif;
+  text-align: center;
+  color:#52154E;
+}
+
+/* color de letras*/
+h4{
+  font-size: 1.8em;
+  line-height: 1.1;
+  font-family:  monospace,  'Brush Script MT';
+  text-align: center;
+  color:#52154E;
+  margin-top: 1rem;
+}
+
+.navbar-link {
+  font-family: Vegur, 'PT Sans', Verdana, sans-serif;
+  font-size: 1.2em;
+  margin-right: 16px;
+  font-weight: bold;
+  color: #1a1a1a;
+  letter-spacing: 0.5px;
+}
+/* style={{ color: 'inherit', textDecoration: 'none', marginRight: '16px' }}*/
+
+.error-message {
+  color: #ff4d4f; 
+  text-align: center;
+}
+
+/* color de letras*/
+h3{
+  font-size: 1.5em;
+  line-height: 1.1;
+  font-family:  monospace,  'Brush Script MT';
+  text-align: center;
+  color:#BB0A21;
+  margin-top: 1rem;
+}
+
+.loan-dates {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: black; 
+  text-align: center;
+  align-content: center;
+  letter-spacing: 0.1px;
+  font-weight: bold;
+  font-family: monospace, 'Brush Script MT', sans-serif;
+  
+}
+
+.return-form {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.tool-status-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.pay-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 1px solid #28a745;
+  border-radius: 8px;
+  background-color: #e8f5e9;
+}
+/*
+Brush Script MT
+Haettenschweiler,
+<p class="flavor">French Vanilla</p><p class="price">3.00</p>
+.item p {
+  display: inline-block;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  font-size: 18px;
+}*/
+
+.yesLoan{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.button-container{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.action-button{
+  align-items: center;
+  justify-content: center;
+  margin-top: 1rem;
+
+  
+}
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #BB0A21;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #b497d6;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #b497d6;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}

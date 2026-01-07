@@ -19,8 +19,5 @@ public class PricingConfigEntity {
     // RF4.1 Tarifa diaria de arriendo (GENERAL)
     private double rentalFeeDaily;
 
-    // RF4.2 Tarifa diaria de multa por atraso (GENERAL)
-    private double lateFeeDaily;
 
-    // si quieres cobrar reposición por baja, el toolValue viene desde inventory por tool (RF4.3)
 }

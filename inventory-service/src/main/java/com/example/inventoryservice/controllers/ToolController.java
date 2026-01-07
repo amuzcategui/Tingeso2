@@ -19,7 +19,7 @@ public class ToolController {
 
     // ------------------ RF1.1 Registrar nuevas herramientas ------------------
     // rutPerson: rut de quien realiza la operación (lo validas en el front)
-    @PostMapping
+    @PostMapping("/save")
     public ResponseEntity<?> createTool(
             @RequestBody ToolEntity tool,
             @RequestParam String rutPerson

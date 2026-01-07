@@ -24,9 +24,6 @@ public class CustomerService {
                 customer.getPhone() != null &&
                 customer.getEmail() != null) {
 
-            if (customer.getStatus() == null) {
-                customer.setStatus("Activo");
-            }
 
             return customerRepository.save(customer);
         }
@@ -77,7 +74,9 @@ public class CustomerService {
                 }
             }
 
+            newCustomer.setPassword(null);
             newCustomer.setStatus("Activo");
+            newCustomer.setQuantityLoans(0);
 
             // Reutiliza validación + setStatus por defecto
             return createCustomer(newCustomer);
