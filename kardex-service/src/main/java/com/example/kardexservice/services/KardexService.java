@@ -4,6 +4,7 @@ import com.example.kardexservice.entities.KardexEntity;
 import com.example.kardexservice.repositories.KardexRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 
@@ -12,6 +13,7 @@ public class KardexService {
 
     @Autowired
     private KardexRepository kardexRepository;
+    @Autowired private RestTemplate restTemplate;
 
     public KardexEntity saveMovement(KardexEntity movement) {
         if (movement == null) throw new IllegalArgumentException("Movimiento inválido");
