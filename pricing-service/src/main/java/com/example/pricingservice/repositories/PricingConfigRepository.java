@@ -8,6 +8,6 @@ import java.util.List;
 
 @Repository
 public interface PricingConfigRepository extends JpaRepository<PricingConfigEntity,Long> {
-    
+
     public List<PricingConfigEntity> findAll();
 }
