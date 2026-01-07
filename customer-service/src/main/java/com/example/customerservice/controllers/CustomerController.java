@@ -103,7 +103,7 @@ public class CustomerController {
 
     public ResponseEntity<?> findByRut(@RequestParam String rut) {
         try {
-            CustomerEntity customer = customerRepository.findByRutI(rut);
+            CustomerEntity customer = customerRepository.findByRut(rut);
             return ResponseEntity.ok(customer);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
