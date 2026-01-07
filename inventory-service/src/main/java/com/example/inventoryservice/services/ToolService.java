@@ -316,6 +316,16 @@ public class ToolService {
         return toolRepository.findByname(name);
     }
 
+    @Transactional
+    public List<ToolEntity> getAllAvailableTools() {
+        return toolRepository.findAllByinitialState("Disponible");
+    }
+
+    @Transactional
+    public List<ToolEntity> getAllTools() {
+        return toolRepository.findAll();
+    }
+
 
 
 

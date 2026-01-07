@@ -361,4 +361,7 @@ public class LoanService {
         List<LoanEntity> loans = loanRepository.findByrutCustomer(rutCustomer);
         return loans;
     }
+
+
+
 }

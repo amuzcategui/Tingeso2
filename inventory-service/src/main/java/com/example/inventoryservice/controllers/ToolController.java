@@ -4,6 +4,7 @@ import com.example.inventoryservice.entities.ToolEntity;
 import com.example.inventoryservice.services.ToolService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -125,6 +126,29 @@ public class ToolController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllAvailableTools() {
+        try {
+            return ResponseEntity.ok(toolService.getAllAvailableTools());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Inventario completo (solo ADMIN según gateway)
+    @GetMapping("/inventory/all")
+    public ResponseEntity<?> getAllToolsForAdmin() {
+        try {
+            return ResponseEntity.ok(toolService.getAllTools());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+
+
+
 
 
 
