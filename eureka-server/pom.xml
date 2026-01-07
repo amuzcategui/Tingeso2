@@ -43,6 +43,12 @@
             <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+
         <!-- Config Client (si vas a leer config desde config-server) -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
