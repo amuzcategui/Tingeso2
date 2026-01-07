@@ -24,10 +24,9 @@ public class LoanService {
     // ---------- Eureka service names ----------
     private static final String INVENTORY_BASE = "http://inventory-service/api/v1/tools";
     private static final String PRICING_BASE   = "http://pricing-service/api/v1/pricing";
+    private static final String CUSTOMER_BASE  = "http://customer-service/api/v1/customer";
 
     // ---------- Inventory endpoints ----------
-    // Requiere que tengas en inventory:
-    // GET /api/v1/tools/search?name=...
     private static final String INV_SEARCH_BY_NAME = INVENTORY_BASE + "/search?name={name}";
     private static final String INV_LOAN           = INVENTORY_BASE + "/{idTool}/loan?rutPerson={rut}&quantity={quantity}";
     private static final String INV_AVAILABLE      = INVENTORY_BASE + "/{idTool}/available?rutPerson={rut}&quantity={quantity}";
@@ -38,7 +37,50 @@ public class LoanService {
     private static final String PRICE_CALC_LOAN    = PRICING_BASE + "/calculate/loan";
     private static final String PRICE_CALC_LATEFEE = PRICING_BASE + "/calculate/late-fee";
 
-    // ---------------- Inventory helpers ----------------
+    // ---------- Customer endpoints ----------
+    // En tu CustomerController YA tienes:
+    // GET /api/v1/customer/{rut}
+    // PUT /api/v1/customer/{rut}/loans?delta=1
+    private static final String CUST_GET_BY_RUT     = CUSTOMER_BASE + "/{rut}";
+    private static final String CUST_UPDATE_LOANS   = CUSTOMER_BASE + "/{rut}/loans?delta={delta}";
+
+    // =========================================================================
+    //  CUSTOMER helpers (JSON Map)
+    // =========================================================================
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> customerGetOrThrow(String rut) {
+        try {
+            ResponseEntity<Map> resp = restTemplate.getForEntity(CUST_GET_BY_RUT, Map.class, rut);
+            if (!resp.getStatusCode().is2xxSuccessful() || resp.getBody() == null) {
+                throw new IllegalArgumentException("Cliente no encontrado");
+            }
+            return (Map<String, Object>) resp.getBody();
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("No se pudo conectar a customer-service (GET /customer/{rut})", e);
+        }
+    }
+
+    private void customerUpdateLoans(String rut, int delta) {
+        try {
+            restTemplate.exchange(CUST_UPDATE_LOANS, HttpMethod.PUT, null, Object.class, rut, delta);
+        } catch (Exception e) {
+            throw new RuntimeException("No se pudo actualizar quantityLoans en customer-service", e);
+        }
+    }
+
+    private void validateCustomerActive(Map<String, Object> customerJson) {
+        String status = String.valueOf(customerJson.getOrDefault("status", ""));
+        if (!"Activo".equalsIgnoreCase(status)) {
+            throw new IllegalArgumentException("El cliente no está activo");
+        }
+    }
+
+    // =========================================================================
+    //  INVENTORY helpers
+    // =========================================================================
 
     @SuppressWarnings("unchecked")
     private List<Map<String, Object>> inventorySearchByName(String name) {
@@ -85,7 +127,9 @@ public class LoanService {
         }
     }
 
-    // ---------------- Pricing helpers ----------------
+    // =========================================================================
+    //  PRICING helpers
+    // =========================================================================
 
     private double pricingCalculateLoan(int days) {
         Map<String, Object> body = new HashMap<>();
@@ -121,7 +165,9 @@ public class LoanService {
         }
     }
 
-    // ---------------- JSON helpers ----------------
+    // =========================================================================
+    //  JSON helpers
+    // =========================================================================
 
     private boolean isLoanable(Map<String, Object> toolJson) {
         if (toolJson == null) return false;
@@ -146,7 +192,7 @@ public class LoanService {
     }
 
     // =========================================================================
-    //  FIRMAS EXACTAS (como tu monolito)
+    //  FIRMAS EXACTAS
     // =========================================================================
 
     @Transactional
@@ -157,7 +203,6 @@ public class LoanService {
             LocalDate startDate,
             LocalDate dueDate
     ) {
-
         if (rutCustomer == null || rutCustomer.isBlank()) throw new IllegalArgumentException("Cliente no encontrado");
         if (toolNames == null || toolNames.isEmpty()) throw new IllegalArgumentException("Debe indicar herramientas");
         if (startDate == null || dueDate == null) throw new IllegalArgumentException("Fechas requeridas");
@@ -165,6 +210,10 @@ public class LoanService {
 
         int days = (int) ChronoUnit.DAYS.between(startDate, dueDate);
         if (days < 1) throw new IllegalArgumentException("El arriendo debe ser mayor a un día");
+
+        // ✅ 1) validar cliente existe + activo (equivalente a tu monolito)
+        Map<String, Object> customer = customerGetOrThrow(rutCustomer);
+        validateCustomerActive(customer);
 
         boolean hasOverdue = loanRepository.existsByRutCustomerAndEndDateIsNullAndDueDateBefore(rutCustomer, LocalDate.now());
         boolean hasUnpaid  = loanRepository.existsByRutCustomerAndPaidIsFalseAndEndDateNotNull(rutCustomer);
@@ -199,8 +248,11 @@ public class LoanService {
                 namesForLoan.add(toolName);
             }
 
-            // rentalFee desde pricing-service (NO desde herramientas)
+            // rentalFee desde pricing-service
             double rentalFee = pricingCalculateLoan(days);
+
+            // ✅ 2) actualizar quantityLoans +1 (equivalente a customer.setQuantityLoans+save)
+            customerUpdateLoans(rutCustomer, +1);
 
             loan.setRutCustomer(rutCustomer);
             loan.setToolNames(namesForLoan);
@@ -226,11 +278,10 @@ public class LoanService {
     public LoanEntity returnTools(
             long idLoan,
             double dailyLateFee,   // firma exacta, ya NO se usa (lateFine viene de pricing-service)
-            double repairCost,     // firma exacta (fallback si no hay pricing de reparación)
+            double repairCost,     // firma exacta
             List<String> damaged,
             List<String> discarded
     ) {
-
         LoanEntity loan = loanRepository.findByid(idLoan);
         if (loan == null) throw new IllegalArgumentException("Préstamo no encontrado");
         if (loan.isPaid()) throw new IllegalArgumentException("Ya el préstamo fue devuelto");
@@ -248,7 +299,7 @@ public class LoanService {
         loan.setEndDate(endDate);
 
         int lateDays = 0;
-        if (endDate.isAfter(dueDate)) {
+        if (dueDate != null && endDate.isAfter(dueDate)) {
             lateDays = (int) ChronoUnit.DAYS.between(dueDate, endDate);
         }
 
@@ -273,7 +324,7 @@ public class LoanService {
 
             if (discarded.contains(toolName)) {
                 inventoryDeactivate(idTool, rutCustomer, 1);
-                loan.setFine(loan.getFine() + getToolValue(prestada)); // cobra reposición
+                loan.setFine(loan.getFine() + getToolValue(prestada)); // reposición
 
             } else if (damaged.contains(toolName)) {
                 inventoryRepair(idTool, rutCustomer, 1);
@@ -283,6 +334,9 @@ public class LoanService {
                 inventoryAvailable(idTool, rutCustomer, 1);
             }
         }
+
+        // ✅ 3) actualizar quantityLoans -1
+        customerUpdateLoans(rutCustomer, -1);
 
         return loanRepository.save(loan);
     }
@@ -299,7 +353,6 @@ public class LoanService {
     public List<LoanEntity> listActiveLoans(LocalDate from, LocalDate to) {
         if (from != null && to != null) {
             if (to.isBefore(from)) throw new IllegalArgumentException("Rango inválido (to < from)");
-            // Filtramos por startDate (puedes cambiar a dueDate si prefieres)
             return loanRepository.findByEndDateIsNullAndStartDateBetween(from, to);
         }
         return loanRepository.findByEndDateIsNull();
@@ -319,9 +372,7 @@ public class LoanService {
 
         List<LoanEntity> out = new ArrayList<>();
         for (LoanEntity l : base) {
-            if (l.getDueDate() != null && l.getDueDate().isBefore(today)) {
-                out.add(l);
-            }
+            if (l.getDueDate() != null && l.getDueDate().isBefore(today)) out.add(l);
         }
         return out;
     }
@@ -336,7 +387,6 @@ public class LoanService {
         List<LoanEntity> current = new ArrayList<>();
 
         for (LoanEntity l : active) {
-            // si no tiene dueDate, lo tratamos como vigente (como tu monolito)
             if (l.getDueDate() != null && l.getDueDate().isBefore(today)) overdue.add(l);
             else current.add(l);
         }
@@ -347,8 +397,6 @@ public class LoanService {
         return resp;
     }
 
-    // ------------------ Helpers básicos ------------------
-
     @Transactional
     public LoanEntity getLoanById(long idLoan) {
         LoanEntity loan = loanRepository.findByid(idLoan);
@@ -358,10 +406,6 @@ public class LoanService {
 
     @Transactional
     public List<LoanEntity> findLoansByCustomerRut(String rutCustomer) {
-        List<LoanEntity> loans = loanRepository.findByrutCustomer(rutCustomer);
-        return loans;
+        return loanRepository.findByrutCustomer(rutCustomer);
     }
-
-
-
 }

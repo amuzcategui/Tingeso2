@@ -26,3 +26,8 @@ eureka:
     register-with-eureka: true
     service-url:
       defaultZone: http://eureka-server-service:8761/eureka/
+
+  services:
+    kardex:
+      base-url: ${KARDEX_URL:http://kardex-service}
+
