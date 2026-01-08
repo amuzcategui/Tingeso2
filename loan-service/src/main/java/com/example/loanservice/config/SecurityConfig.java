@@ -1,4 +1,4 @@
-package com.example.userservice.config;
+package com.example.loanservice.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,14 +21,16 @@ public class SecurityConfig {
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                // 1. Activamos CORS y lo vinculamos a nuestra configuración de abajo
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Activa CORS
                 .authorizeHttpRequests(auth -> auth
-                        // 2. PERMITIMOS OPTIONS (Vital para que el navegador no bloquee)
+                        // Permite los pre-flights de CORS
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
-                        // 3. Tus endpoints protegidos
-                        .requestMatchers("/users/check-and-create").authenticated()
+
+                        // AQUÍ PUEDES PERSONALIZAR REGLAS ESPECÍFICAS
+                        // Ej: .requestMatchers(HttpMethod.DELETE, "/**").hasRole("ADMIN")
+
+                        // Todo lo demás requiere token válido
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()));
@@ -39,8 +41,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // Origen de tu Frontend
-        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedOrigins(List.of("http://localhost:5173")); // Tu frontend
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setExposedHeaders(List.of("Authorization"));
