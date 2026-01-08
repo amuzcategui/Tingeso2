@@ -10,6 +10,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtGrantedAuthoritiesConverterAdapter;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.http.HttpMethod;
+
 
 import reactor.core.publisher.Flux;
 
@@ -25,40 +27,42 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(ex -> ex
+                        .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         // si tienes endpoints públicos (health, etc.)
                         .pathMatchers("/actuator/**").permitAll()
 
                         // ----- ADMIN -----
                         // pricing: configurar precios
-                        .pathMatchers("/api/v1/pricing/**").hasRole("ADMIN")
+                        .pathMatchers("/pricing/**").hasRole("ADMIN")
 
                         // kardex completo (movimientos + consultas)
-                        .pathMatchers("/api/v1/kardex/**").hasRole("ADMIN")
+                        .pathMatchers("/kardex/**").hasRole("ADMIN")
 
                         // reporting completo
-                        .pathMatchers("/api/v1/reporting/**").hasRole("ADMIN")
+                        .pathMatchers("/reporting/**").hasRole("ADMIN")
 
                         // devolver préstamos (solo admin según lo que dijiste)
-                        .pathMatchers("/api/v1/loan/return/**").hasRole("ADMIN")
-                        .pathMatchers("/api/v1/loan/*/pay").hasRole("ADMIN") // pagar préstamo (si lo usas)
+                        .pathMatchers("/loan/return/**").hasRole("ADMIN")
+                        .pathMatchers("/loan/*/pay").hasRole("ADMIN") // pagar préstamo (si lo usas)
 
                         // opcional: endpoints “admin” de loan
-                        .pathMatchers("/api/v1/loan/all-loans").hasRole("ADMIN")
-                        .pathMatchers("/api/v1/loan/active/**").hasRole("ADMIN")
+                        .pathMatchers("/loan/all-loans").hasRole("ADMIN")
+                        .pathMatchers("/loan/active/**").hasRole("ADMIN")
 
                         // ----- USER or ADMIN -----
-                        .pathMatchers("/api/v1/loan/create").hasAnyRole("USER", "ADMIN")
-                        .pathMatchers("/api/v1/loan/my-loans").hasAnyRole("USER", "ADMIN")
-                        .pathMatchers("/api/v1/loan/{idLoan}").hasAnyRole("USER", "ADMIN")
+                        .pathMatchers("/loan/create").hasAnyRole("USER", "ADMIN")
+                        .pathMatchers("/loan/my-loans").hasAnyRole("USER", "ADMIN")
+                        .pathMatchers("/loan/{idLoan}").hasAnyRole("USER", "ADMIN")
 
                         // inventory / customer:
                         // ajusta según tu criterio (puedes dejarlos abiertos a USER+ADMIN)
-                        .pathMatchers("/api/v1/tools/**").hasAnyRole("USER", "ADMIN")
-                        .pathMatchers("/api/v1/tools/inventory/all").hasAnyRole("ADMIN")
-                        .pathMatchers("/api/v1/customer/**").hasAnyRole("USER", "ADMIN")
+                        .pathMatchers("/tools/**").hasAnyRole("USER", "ADMIN")
+                        .pathMatchers("/tools/inventory/all").hasAnyRole("ADMIN")
+                        .pathMatchers("/customer/**").hasAnyRole("USER", "ADMIN")
 
                         // todo el resto bajo api
-                        .pathMatchers("/api/v1/**").authenticated()
+                        .pathMatchers("/**").authenticated()
 
                         .anyExchange().permitAll()
                 )
