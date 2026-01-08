@@ -1,9 +1,8 @@
 import httpClient from '../http-common.js';
 
 // POST /api/v1/customer/check-and-create
-const completeProfile = () => {
-  return httpClient.post('/customer/check-and-create');
-};
+const completeProfile = () => httpClient.post('/users/check-and-create');
+
 
 // GET /api/v1/customer
 const getAllCustomers = () => {

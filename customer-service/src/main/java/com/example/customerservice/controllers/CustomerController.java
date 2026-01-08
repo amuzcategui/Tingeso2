@@ -81,21 +81,6 @@ public class CustomerController {
         }
     }
 
-    // 5) Check-and-create usando JWT (si tu seguridad lo entrega)
-    // POST /api/v1/customer/check-and-create
-    // Requiere Authorization: Bearer <token>
-    @PostMapping("/check-and-create")
-    public ResponseEntity<?> checkAndCreate(@AuthenticationPrincipal Jwt jwt) {
-        try {
-            if (jwt == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No hay JWT en el contexto.");
-            }
-            CustomerEntity customer = customerService.checkAndCreateCustomer(jwt);
-            return ResponseEntity.ok(customer);
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
-    }
 
     // NO SE SI DEJAN ACÁ
 

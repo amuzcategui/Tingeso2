@@ -72,6 +72,14 @@ spring:
           filters:
             - RewritePath=/reporting/(?<segment>.*), /api/v1/reporting/$\{segment}
 
+        - id: user
+          uri: lb://user-service
+          predicates:
+            - Path=/users/**
+          filters:
+            - RewritePath=/users/(?<segment>.*), /api/v1/users/${segment}
+
+
 eureka:
   client:
     service-url:

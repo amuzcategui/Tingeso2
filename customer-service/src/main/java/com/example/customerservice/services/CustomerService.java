@@ -19,16 +19,30 @@ public class CustomerService {
     private RestTemplate restTemplate;
 
     public CustomerEntity createCustomer(CustomerEntity customer) {
-        if (customer.getName() != null &&
-                customer.getRut() != null &&
-                customer.getPhone() != null &&
-                customer.getEmail() != null) {
-
-
-            return customerRepository.save(customer);
+        if (customer == null) {
+            throw new IllegalArgumentException("Cliente inválido");
         }
-        throw new IllegalArgumentException("Faltan datos para poder registrar al cliente");
+
+        if (customer.getRut() == null || customer.getRut().isBlank())
+            throw new IllegalArgumentException("RUT requerido");
+
+        if (customer.getName() == null || customer.getName().isBlank())
+            throw new IllegalArgumentException("Nombre requerido");
+
+        if (customer.getEmail() == null || customer.getEmail().isBlank())
+            throw new IllegalArgumentException("Email requerido");
+
+        // phone puede venir null desde Keycloak, no lo hacemos obligatorio
+        // si quieres, lo normalizas:
+        if (customer.getPhone() == null) customer.setPhone("");
+
+        // defaults por si no vienen
+        if (customer.getStatus() == null || customer.getStatus().isBlank()) customer.setStatus("Activo");
+        if (customer.getQuantityLoans() < 0) customer.setQuantityLoans(0);
+
+        return customerRepository.save(customer);
     }
+
 
     public CustomerEntity findByRutOrThrow(String rut) {
         return customerRepository.findByrut(rut)
@@ -46,42 +60,6 @@ public class CustomerService {
         return customerRepository.findAll();
     }
 
-    // Crear cliente desde JWT si no existe
-    public CustomerEntity checkAndCreateCustomer(Jwt jwt) {
-        String rut = jwt.getClaimAsString("rut");
-
-        return customerRepository.findByrut(rut).orElseGet(() -> {
-            CustomerEntity newCustomer = new CustomerEntity();
-
-            newCustomer.setRut(rut);
-            newCustomer.setEmail(jwt.getClaimAsString("email"));
-            newCustomer.setName(
-                    jwt.getClaimAsString("given_name") + " " +
-                            jwt.getClaimAsString("family_name")
-            );
-            newCustomer.setPhone(jwt.getClaimAsString("phone"));
-
-            String birthDateString = jwt.getClaimAsString("birthdate");
-            if (birthDateString != null) {
-                newCustomer.setBirthDate(LocalDate.parse(birthDateString));
-            }
-
-            Map<String, Object> realmAccess = jwt.getClaimAsMap("realm_access");
-            if (realmAccess != null) {
-                Object rolesObj = realmAccess.get("roles");
-                if (rolesObj instanceof List<?> roles) {
-                    newCustomer.setAdmin(roles.contains("ADMIN"));
-                }
-            }
-
-            newCustomer.setPassword(null);
-            newCustomer.setStatus("Activo");
-            newCustomer.setQuantityLoans(0);
-
-            // Reutiliza validación + setStatus por defecto
-            return createCustomer(newCustomer);
-        });
-    }
 
     public CustomerEntity updateQuantityLoans(String rut, int delta) {
         CustomerEntity customer = findByRutOrThrow(rut);

@@ -40,12 +40,22 @@ const Home = () => {
         const feeRes = await toolService.getRentalFeeDaily();
         setRentalFeeDaily(feeRes.data);
       } catch (err) {
-        const backendMsg = err?.response?.data;
-        console.error('Fallo al sincronizar o cargar datos:', backendMsg || err.message, err);
-        setError(backendMsg || 'No se pudieron cargar los datos.');
+        const data = err?.response?.data;
+
+        // Si backend devuelve objeto (timestamp, path, etc.)
+        const msg =
+          typeof data === "string"
+            ? data
+            : (data?.message || data?.error || JSON.stringify(data)) ||
+              err.message ||
+              "No se pudieron cargar los datos.";
+
+        console.error("Fallo al sincronizar o cargar datos:", data || err.message, err);
+        setError(msg);
       } finally {
         setIsLoading(false);
       }
+
     };
     
     run();

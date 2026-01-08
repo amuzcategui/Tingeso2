@@ -1,40 +1,33 @@
 package com.example.userservice.controllers;
 
+import com.example.userservice.services.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.Map;
 
 @RestController
+@RequestMapping("/api/v1/users")
 @CrossOrigin("*")
 public class UserController {
 
-    @GetMapping("/public/health")
-    public ResponseEntity<?> health() {
-        return ResponseEntity.ok("ok");
-    }
+    @Autowired
+    private UserService userService;
 
-    // El gateway inyecta estos headers desde el JWT
-    @GetMapping("/api/v1/auth/me")
-    public ResponseEntity<?> me(
-            @RequestHeader(value = "X-User-Sub", required = false) String sub,
-            @RequestHeader(value = "X-User-Username", required = false) String username,
-            @RequestHeader(value = "X-User-Email", required = false) String email,
-            @RequestHeader(value = "X-User-Rut", required = false) String rut,
-            @RequestHeader(value = "X-User-Roles", required = false) String rolesCsv
-    ) {
-        Map<String, Object> out = new LinkedHashMap<>();
-        out.put("sub", sub);
-        out.put("username", username);
-        out.put("email", email);
-        out.put("rut", rut);
-
-        List<String> roles = new ArrayList<>();
-        if (rolesCsv != null && !rolesCsv.isBlank()) {
-            roles.addAll(Arrays.asList(rolesCsv.split(",")));
+    // POST /api/v1/users/check-and-create
+    // Requiere Authorization: Bearer <token>
+    @PostMapping("/check-and-create")
+    public ResponseEntity<?> checkAndCreate(@AuthenticationPrincipal Jwt jwt) {
+        try {
+            Map<String, Object> customer = userService.checkAndCreateCustomerFromJwt(jwt);
+            return ResponseEntity.ok(customer);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(e.getMessage());
         }
-        out.put("roles", roles);
-
-        return ResponseEntity.ok(out);
     }
 }
