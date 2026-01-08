@@ -19,12 +19,7 @@ spring:
             allowedOrigins:
               - "http://localhost:5173"
               - "http://localhost:8070"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - OPTIONS
+            allowedMethods: [GET, POST, PUT, DELETE, OPTIONS]
             allowedHeaders: "*"
             allowCredentials: true
 
