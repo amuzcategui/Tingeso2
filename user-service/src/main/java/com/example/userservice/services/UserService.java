@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDate;
 import java.util.*;
 
 @Service
@@ -16,9 +15,9 @@ public class UserService {
     @Autowired
     private RestTemplate restTemplate;
 
-    private static final String CUSTOMER_BASE = "http://customer-service/api/v1/customer";
-    private static final String CUST_GET_BY_RUT = CUSTOMER_BASE + "/{rut}";
-    private static final String CUST_CREATE     = CUSTOMER_BASE; // POST /api/v1/customer
+    private static final String CUSTOMER_BASE    = "http://customer-service/api/v1/customer";
+    private static final String CUST_GET_BY_RUT  = CUSTOMER_BASE + "/{rut}";
+    private static final String CUST_CREATE      = CUSTOMER_BASE; // POST /api/v1/customer
 
     @SuppressWarnings("unchecked")
     public Map<String, Object> checkAndCreateCustomerFromJwt(Jwt jwt) {
@@ -36,41 +35,31 @@ public class UserService {
 
         // 1) si existe, devolverlo
         Map<String, Object> existing = tryGetCustomer(rut, jwt);
-
         if (existing != null) return existing;
 
-        // 2) si no existe, crearlo con Map (sin DTO)
+        // 2) si no existe, crearlo
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("rut", rut);
         body.put("email", jwt.getClaimAsString("email"));
 
         String given = jwt.getClaimAsString("given_name");
         String family = jwt.getClaimAsString("family_name");
-        String fullName = joinName(given, family);
+        body.put("name", joinName(given, family));
 
-        body.put("name", fullName);
-
-        // si no tienes phone en KC, puede venir null -> ajusta el customer-service para permitirlo
         body.put("phone", jwt.getClaimAsString("phone"));
 
         String birthdate = jwt.getClaimAsString("birthdate");
         if (birthdate != null && !birthdate.isBlank()) {
-            // CustomerEntity suele ser LocalDate, Jackson acepta yyyy-MM-dd si el campo se llama birthDate
             body.put("birthDate", birthdate);
         }
 
-        // admin desde roles
         body.put("admin", hasRole(jwt, "ADMIN"));
-
-        // defaults del negocio
         body.put("status", "Activo");
         body.put("quantityLoans", 0);
         body.put("password", null);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        HttpEntity<Map<String, Object>> req = new HttpEntity<>(body, headers);
+        // ✅ IMPORTANTE: aquí sí mandamos Authorization Bearer
+        HttpEntity<Map<String, Object>> req = new HttpEntity<>(body, authHeaders(jwt));
 
         try {
             ResponseEntity<Map> created = restTemplate.exchange(CUST_CREATE, HttpMethod.POST, req, Map.class);
@@ -79,7 +68,7 @@ public class UserService {
             }
             throw new RuntimeException("customer-service no devolvió el cliente creado");
         } catch (HttpClientErrorException e) {
-            // si el customer-service devuelve 400 con un mensaje, lo pasamos tal cual
+            // Si customer-service devuelve 4xx, devolvemos el body para debug
             throw new IllegalArgumentException(e.getResponseBodyAsString());
         } catch (Exception e) {
             throw new RuntimeException("No se pudo crear el cliente en customer-service", e);
@@ -118,37 +107,6 @@ public class UserService {
             throw new RuntimeException("No se pudo consultar customer-service (GET /customer/{rut})", e);
         }
     }
-
-    private Map<String, Object> createCustomerFromJwt(Jwt jwt) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("rut",     jwt.getClaimAsString("preferred_username"));
-        body.put("name",    jwt.getClaimAsString("name"));
-        body.put("email",   jwt.getClaimAsString("email"));
-        body.put("phone",   jwt.getClaimAsString("phone_number"));
-        body.put("address", jwt.getClaimAsString("address"));
-
-        try {
-            HttpEntity<Map<String, Object>> req = new HttpEntity<>(body, authHeaders(jwt));
-            ResponseEntity<Map> created = restTemplate.exchange(
-                    CUST_CREATE,
-                    HttpMethod.POST,
-                    req,
-                    Map.class
-            );
-
-            if (created.getStatusCode().is2xxSuccessful() && created.getBody() != null) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> out = (Map<String, Object>) created.getBody();
-                return out;
-            }
-            throw new RuntimeException("Respuesta no exitosa desde customer-service al crear customer: " + created.getStatusCode());
-
-        } catch (Exception e) {
-            throw new RuntimeException("No se pudo crear customer en customer-service", e);
-        }
-    }
-
-
 
     private boolean hasRole(Jwt jwt, String role) {
         Object realmAccessObj = jwt.getClaims().get("realm_access");
