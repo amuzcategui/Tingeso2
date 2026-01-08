@@ -74,7 +74,11 @@ management:
   endpoints:
     web:
       exposure:
-        include: gateway,health,info
+        include: "*"
+  endpoint:
+    gateway:
+      access: unrestricted
+
 
 eureka:
   instance:
