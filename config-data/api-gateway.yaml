@@ -5,22 +5,14 @@ spring:
   application:
     name: api-gateway
 
-  # Si usas Keycloak como Resource Server en el gateway, deja esto
   security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: http://localhost:9090/realms/sisgr-realm
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: gateway,health,info
-
 
   cloud:
     gateway:
-      # CORS global a nivel Gateway (importante para preflight OPTIONS)
       globalcors:
         add-to-simple-url-handler-mapping: true
         corsConfigurations:
@@ -40,58 +32,49 @@ spring:
               - "Authorization"
             allowCredentials: false
 
-      # Configuración de descubrimiento automático (opcional)
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
 
-      # Evita duplicados si algún microservicio también agrega CORS
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
 
       routes:
-        # --- USER SERVICE ---
         - id: user
           uri: lb://user-service
           predicates:
             - Path=/users/**
-
-        # --- CUSTOMER SERVICE ---
         - id: customer
           uri: lb://customer-service
           predicates:
             - Path=/customer/**
-
-        # --- INVENTORY SERVICE ---
         - id: inventory
           uri: lb://inventory-service
           predicates:
             - Path=/tools/**
-
-        # --- LOAN SERVICE ---
         - id: loan
           uri: lb://loan-service
           predicates:
             - Path=/loan/**
-
-        # --- KARDEX SERVICE ---
         - id: kardex
           uri: lb://kardex-service
           predicates:
             - Path=/kardex/**
-
-        # --- PRICING SERVICE ---
         - id: pricing
           uri: lb://pricing-service
           predicates:
             - Path=/pricing/**
-
-        # --- REPORTING SERVICE ---
         - id: reporting
           uri: lb://reporting-service
           predicates:
             - Path=/reporting/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: gateway,health,info
 
 eureka:
   instance:
