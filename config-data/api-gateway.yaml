@@ -1,9 +1,16 @@
 server:
-  port: 8070
+  port: 8080
+
+eureka:
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
 
 spring:
   application:
-    name: api-gateway
+    name: gateway-server
 
   security:
     oauth2:
@@ -13,33 +20,32 @@ spring:
 
   cloud:
     gateway:
-      globalcors:
-        add-to-simple-url-handler-mapping: true
-        corsConfigurations:
-          '[/**]':
-            allowedOrigins:
-              - "http://localhost:5173"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - PATCH
-              - DELETE
-              - OPTIONS
-            allowedHeaders:
-              - "*"
-            exposedHeaders:
-              - "Authorization"
-            allowCredentials: false
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: true
 
-      discovery:
-        locator:
-          enabled: true
-          lower-case-service-id: true
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
 
-      default-filters:
-        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
-
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOrigins:
+                  - "http://localhost:5173"
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - PATCH
+                  - DELETE
+                  - OPTIONS
+                allowedHeaders:
+                  - Authorization
+                  - Content-Type
+                exposedHeaders:
+                  - Authorization
       routes:
         - id: user
           uri: lb://user-service
@@ -79,12 +85,3 @@ management:
     gateway:
       access: unrestricted
 
-
-eureka:
-  instance:
-    preferIpAddress: true
-  client:
-    fetch-registry: true
-    register-with-eureka: true
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
