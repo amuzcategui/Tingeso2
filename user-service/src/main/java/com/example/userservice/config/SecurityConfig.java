@@ -25,7 +25,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         // check-and-create debe requerir token
-                        .requestMatchers("/api/v1/user/check-and-create").authenticated()
+                        .requestMatchers("/users/check-and-create").authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()));
