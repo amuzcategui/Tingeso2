@@ -5,29 +5,51 @@ spring:
   application:
     name: api-gateway
 
+  # Si usas Keycloak como Resource Server en el gateway, deja esto
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/sisgr-realm
+
   cloud:
     gateway:
-      # Configuración de descubrimiento automático (opcional, pero útil)
+      # CORS global a nivel Gateway (importante para preflight OPTIONS)
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:5173"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - "*"
+            exposedHeaders:
+              - "Authorization"
+            allowCredentials: false
+
+      # Configuración de descubrimiento automático (opcional)
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
 
-      # Filtros por defecto para TODAS las rutas
+      # Evita duplicados si algún microservicio también agrega CORS
       default-filters:
-        # DedupeResponseHeader: Si el microservicio envía CORS y el Gateway
-        # intenta añadir algo (o hay un proxy intermedio), esto asegura que
-        # solo llegue UN header al navegador. RETAIN_UNIQUE se queda con el primero.
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
 
-      # Definición de Rutas
       routes:
         # --- USER SERVICE ---
         - id: user
           uri: lb://user-service
           predicates:
             - Path=/users/**
-          # Nota: No necesitamos RewritePath si el controller escucha en /users
 
         # --- CUSTOMER SERVICE ---
         - id: customer
@@ -65,7 +87,6 @@ spring:
           predicates:
             - Path=/reporting/**
 
-# Configuración de Eureka
 eureka:
   instance:
     preferIpAddress: true
