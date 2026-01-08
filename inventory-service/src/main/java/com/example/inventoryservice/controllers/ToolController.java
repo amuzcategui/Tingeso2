@@ -118,6 +118,7 @@ public class ToolController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @GetMapping("/search")
     public ResponseEntity<?> searchByName(@RequestParam String name) {
         try {
@@ -127,6 +128,7 @@ public class ToolController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @GetMapping("/all")
     public ResponseEntity<?> getAllAvailableTools() {
         try {
@@ -136,6 +138,7 @@ public class ToolController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     // Inventario completo (solo ADMIN según gateway)
     @GetMapping("/inventory/all")
     public ResponseEntity<?> getAllToolsForAdmin() {
