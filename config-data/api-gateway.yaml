@@ -32,32 +32,51 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
+
       routes:
         - id: customer
           uri: lb://customer-service
           predicates:
-            - Path=/api/customers/**
+            - Path=/customer/**
+          filters:
+            - RewritePath=/customer/(?<segment>.*), /api/v1/customer/$\{segment}
+
         - id: inventory
           uri: lb://inventory-service
           predicates:
-            - Path=/api/tools/**
+            - Path=/tools/**
+          filters:
+            - RewritePath=/tools/(?<segment>.*), /api/v1/tools/$\{segment}
+
         - id: loan
           uri: lb://loan-service
           predicates:
-            - Path=/api/loans/**
+            - Path=/loan/**
+          filters:
+            - RewritePath=/loan/(?<segment>.*), /api/v1/loan/$\{segment}
+
         - id: kardex
           uri: lb://kardex-service
           predicates:
-            - Path=/api/kardex/**
+            - Path=/kardex/**
+          filters:
+            - RewritePath=/kardex/(?<segment>.*), /api/v1/kardex/$\{segment}
+
         - id: pricing
           uri: lb://pricing-service
           predicates:
-            - Path=/api/pricing/**
+            - Path=/pricing/**
+          filters:
+            - RewritePath=/pricing/(?<segment>.*), /api/v1/pricing/$\{segment}
+
         - id: reporting
           uri: lb://reporting-service
           predicates:
-            - Path=/api/reports/**
-        - id: user
-          uri: lb://user-service
-          predicates:
-            - Path=/api/users/**
+            - Path=/reporting/**
+          filters:
+            - RewritePath=/reporting/(?<segment>.*), /api/v1/reporting/$\{segment}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
