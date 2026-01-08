@@ -1,9 +1,15 @@
-server:
-  port: 0  # puerto aleatorio (cumple con "no asignación de puertos")
+  server:
+    port: 0  # puerto aleatorio (cumple con "no asignación de puertos")
 
-spring:
-  application:
-    name: loan-service
+  spring:
+    application:
+      name: loan-service
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KC_ISSUER:http://localhost:9090/realms/sisgr-realm}
 
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:5432/loanms
@@ -18,14 +24,14 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-eureka:
-  instance:
-    preferIpAddress: true
-  client:
-    fetch-registry: true
-    register-with-eureka: true
-    service-url:
-      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  eureka:
+    instance:
+      preferIpAddress: true
+    client:
+      fetch-registry: true
+      register-with-eureka: true
+      service-url:
+        defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
 
   services:
     inventory:
