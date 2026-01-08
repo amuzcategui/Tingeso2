@@ -11,6 +11,12 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: http://localhost:9090/realms/sisgr-realm
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: gateway,health,info
+
 
   cloud:
     gateway:
