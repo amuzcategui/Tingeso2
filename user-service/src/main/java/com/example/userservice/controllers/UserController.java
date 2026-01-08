@@ -3,6 +3,7 @@ package com.example.userservice.controllers;
 import com.example.userservice.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -10,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/users")
+@RequestMapping("/users")
 @CrossOrigin("*")
 public class UserController {
 
@@ -19,6 +20,7 @@ public class UserController {
 
     // POST /api/v1/users/check-and-create
     // Requiere Authorization: Bearer <token>
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @PostMapping("/check-and-create")
     public ResponseEntity<?> checkAndCreate(@AuthenticationPrincipal Jwt jwt) {
         try {

@@ -36,15 +36,13 @@ spring:
           uri: lb://customer-service
           predicates:
             - Path=/customer/**
-          filters:
-            - RewritePath=/customer/(?<segment>.*), /api/v1/customer/$\{segment}
+
 
         - id: inventory
           uri: lb://inventory-service
           predicates:
             - Path=/tools/**
-          filters:
-            - RewritePath=/tools/(?<segment>.*), /api/v1/tools/$\{segment}
+
 
         - id: loan
           uri: lb://loan-service
