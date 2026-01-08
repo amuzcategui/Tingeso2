@@ -14,7 +14,8 @@ useEffect(() => {
     if (keycloak && keycloak.tokenParsed) {
       const fetchLoans = async () => {
         try {
-          const userRut = keycloak.tokenParsed.rut;
+          const tp = keycloak?.tokenParsed || {};
+          const userRut = tp.rut || tp.preferred_username || tp.sub || '';
           const response = await getMyLoans(userRut);
           setLoans(response.data);
         } catch (err) {

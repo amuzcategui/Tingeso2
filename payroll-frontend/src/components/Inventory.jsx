@@ -39,7 +39,6 @@ const Inventory = () => {
     const toolData = {
       name: formData.get('name')?.trim(),
       toolValue: parseFloat(formData.get('toolValue')),
-      rentalFee: parseFloat(formData.get('rentalFee')),
       initialState: 'Disponible',
       category: formData.get('category')?.trim(),         
       stock: parseInt(formData.get('stock'), 10),
@@ -92,18 +91,7 @@ const Inventory = () => {
     } else { alert("Cantidad inválida."); }
   };
 
-  // Maneja la actualización de la tarifa de arriendo
-  const handleUpdateFee = async (tool) => {
-    const newFee = prompt(`Ingresa la nueva tarifa para "${tool.name}":`, tool.rentalFee);
-    if (newFee === null) return;
-    const newFeeNum = parseFloat(newFee);
-    if (!isNaN(newFeeNum) && newFeeNum >= 0) {
-      try {
-        await toolService.updateToolFee(tool.id, newFeeNum);
-        fetchTools();
-      } catch (err) { setError("No se pudo actualizar la tarifa."); }
-    } else { alert("Valor inválido."); }
-  };
+
 
   const handleUpdateValue = async (tool) => {
     const newValue = prompt(`Ingresa el nuevo valor para "${tool.name}":`, tool.toolValue);
@@ -141,7 +129,6 @@ const Inventory = () => {
             <th>Nombre</th>
             <th>Stock</th>
             <th>Estado</th>
-            <th>Tarifa Arriendo</th>
             <th>Valor Reposición</th>
             <th>Acciones</th>
           </tr>
@@ -152,10 +139,8 @@ const Inventory = () => {
               <td>{tool.name}</td>
               <td>{tool.stock}</td>
               <td>{tool.initialState}</td>
-              <td>${tool.rentalFee.toFixed(2)}</td>
               <td>${tool.toolValue.toFixed(2)}</td>
               <td>
-                <Button size="small" onClick={() => handleUpdateFee(tool)}>Tarifa</Button>
                 <Button size="small" onClick={() => handleUpdateValue(tool)}>Valor</Button>
                 <Button size="small" onClick={() => handleRepair(tool)}>Reparar</Button>
                 <Button size="small" color="secondary" onClick={() => handleDelete(tool)}>Dar de Baja</Button>
@@ -171,7 +156,6 @@ const Inventory = () => {
           <h2>Añadir Herramienta</h2>
           <TextField name="name" label="Nombre" fullWidth margin="normal" required />
           <TextField name="toolValue" label="Valor de Reposición ($)" type="number" fullWidth margin="normal" required />
-          <TextField name="rentalFee" label="Tarifa de Arriendo Diaria ($)" type="number" fullWidth margin="normal" required />
           <TextField name="category" label="Categoría" fullWidth margin="normal" required />
           <TextField name="stock" label="Stock Inicial" type="number" fullWidth margin="normal" required />
           

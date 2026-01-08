@@ -7,11 +7,12 @@ import '../index.css';
 
 const Kardex = () => {
   const { keycloak } = useKeycloak();
-  const isAdmin = keycloak.tokenParsed?.realm_access?.roles.includes('ADMIN');
+
+  // ✅ no revienta si roles viene undefined
+  const isAdmin = (keycloak?.tokenParsed?.realm_access?.roles || []).includes('ADMIN');
 
   const [activeSection, setActiveSection] = useState(null);
   const [error, setError] = useState('');
-
 
   const [toolName, setToolName] = useState('');
   const [historyResult, setHistoryResult] = useState(null);
@@ -31,7 +32,6 @@ const Kardex = () => {
   const [allKardexResult, setAllKardexResult] = useState(null);
   const [allKardexLoading, setAllKardexLoading] = useState(false);
 
-//open and close
   const toggleSection = (section) => {
     setActiveSection(prev => (prev === section ? null : section));
     setError('');
@@ -41,6 +41,7 @@ const Kardex = () => {
     const fetchActiveGrouped = async () => {
       try {
         setActiveLoansLoading(true);
+        // ✅ viene desde reporting-service
         const resp = await kardexService.getActiveLoansGrouped();
         setActiveLoansGrouped(resp.data);
       } catch {
@@ -53,7 +54,7 @@ const Kardex = () => {
     const fetchAllKardex = async () => {
       try {
         setAllKardexLoading(true);
-        const resp = await kardexService.getAllKardex();
+        const resp = await kardexService.getAllKardex(); // ✅ kardex-service
         setAllKardexResult(resp.data);
       } catch {
         setError('Error al obtener el historial completo del kardex.');
@@ -62,20 +63,15 @@ const Kardex = () => {
       }
     };
 
-    if (activeSection === 'activeLoans' && isAdmin) {
-      fetchActiveGrouped();
-    }
-    if (activeSection === 'fullKardex' && isAdmin) {
-      fetchAllKardex();
-    }
+    if (activeSection === 'activeLoans' && isAdmin) fetchActiveGrouped();
+    if (activeSection === 'fullKardex' && isAdmin) fetchAllKardex();
   }, [activeSection, isAdmin]);
-
 
   const handleToolHistorySearch = async () => {
     if (!toolName) return setError('Por favor, ingresa un nombre de herramienta.');
     setError('');
     try {
-      const response = await kardexService.getToolHistory(toolName);
+      const response = await kardexService.getToolHistory(toolName); // ✅ kardex-service
       setHistoryResult(response.data);
     } catch {
       setError('Error al buscar el historial de la herramienta.');
@@ -85,6 +81,7 @@ const Kardex = () => {
   const handleTopToolsSearch = async () => {
     setError('');
     try {
+      // ✅ viene desde reporting-service
       const response = await kardexService.getTopTools(topToolsFrom, topToolsTo, 5);
       setTopToolsResult(response.data);
     } catch {
@@ -96,7 +93,7 @@ const Kardex = () => {
     if (!rangeFrom || !rangeTo) return setError('Por favor, selecciona ambas fechas.');
     setError('');
     try {
-      const response = await kardexService.getMovementsInRange(rangeFrom, rangeTo, movementType);
+      const response = await kardexService.getMovementsInRange(rangeFrom, rangeTo, movementType); // ✅ kardex-service
       setRangeResult(response.data);
     } catch {
       setError('Error al buscar movimientos.');
@@ -107,7 +104,6 @@ const Kardex = () => {
     <div>
       <h1>Reportes del Sistema (Kardex)</h1>
       {error && <p className="error-message">{error}</p>}
-
 
       <div className="report-section">
         <h4 className="report-header" onClick={() => toggleSection('toolHistory')}>
@@ -145,7 +141,6 @@ const Kardex = () => {
         )}
       </div>
 
-
       <div className="report-section">
         <h4 className="report-header" onClick={() => toggleSection('topTools')}>
           Top 5 Herramientas más Arrendadas {activeSection === 'topTools' ? '▲' : '▼'}
@@ -179,10 +174,9 @@ const Kardex = () => {
           </div>
         )}
       </div>
- {/* Delete this??? */}
+
       {isAdmin && (
         <>
-
           <div className="report-section">
             <h4 className="report-header" onClick={() => toggleSection('rangeMovements')}>
               Movimientos por Rango de Fechas {activeSection === 'rangeMovements' ? '▲' : '▼'}
@@ -201,8 +195,11 @@ const Kardex = () => {
                   value={rangeTo}
                   onChange={(e) => setRangeTo(e.target.value)}
                 />
-                <FormControl size="small" style={{ minWidth: 120, marginLeft: 10 , marginTop: 23, marginRight: 10 , backgroundColor: '#b497d6', borderRadius: "8px" }}> 
-                  <InputLabel>Tipo</InputLabel> 
+                <FormControl
+                  size="small"
+                  style={{ minWidth: 120, marginLeft: 10, marginTop: 23, marginRight: 10, backgroundColor: '#b497d6', borderRadius: "8px" }}
+                >
+                  <InputLabel>Tipo</InputLabel>
                   <Select value={movementType} onChange={(e) => setMovementType(e.target.value)}>
                     <MenuItem value="Préstamo">Préstamo</MenuItem>
                     <MenuItem value="Devolución">Devolución</MenuItem>
@@ -256,9 +253,7 @@ const Kardex = () => {
                           ))}
                         </tbody>
                       </table>
-                    ) : (
-                      <p>No hay préstamos atrasados.</p>
-                    )}
+                    ) : <p>No hay préstamos atrasados.</p>}
 
                     <h3 style={{ color: '#31708f', marginTop: '20px' }}>Vigentes</h3>
                     {activeLoansGrouped.Vigentes?.length > 0 ? (
@@ -275,9 +270,7 @@ const Kardex = () => {
                           ))}
                         </tbody>
                       </table>
-                    ) : (
-                      <p>No hay préstamos vigentes.</p>
-                    )}
+                    ) : <p>No hay préstamos vigentes.</p>}
                   </div>
                 )}
               </div>

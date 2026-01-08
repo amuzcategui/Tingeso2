@@ -11,7 +11,6 @@ const returnLoan = (idLoan, returnData) => {
   params.append('dailyLateFee', returnData.dailyLateFee);
 
 
-  }
   params.append('repairCost', returnData.repairCost);
 
   if (returnData.damagedTools && Array.isArray(returnData.damagedTools)) {
@@ -22,7 +21,7 @@ const returnLoan = (idLoan, returnData) => {
   }
 
   return httpClient.put(`/loan/return/${idLoan}`, null, { params });
-
+};
 
 const getLoanById = (idLoan) => {
   return httpClient.get(`/loan/${idLoan}`);

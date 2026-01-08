@@ -76,7 +76,7 @@ const ReturnLoan = () => {
       const isOverdue = calcIsOverdue(searchedLoan);
       const params = new URLSearchParams();
 
-      if (isOverdue) params.append('dailyLateFee', String(dailyLateFee));
+      if (isOverdue) params.append('dailyLateFee', String(Number(dailyLateFee) || 0));
 
       const rc = damaged.length > 0 ? (Number(repairCost) || 0) : 0;
       params.append('repairCost', String(rc));
@@ -84,7 +84,8 @@ const ReturnLoan = () => {
       damaged.forEach((n) => params.append('damaged', n));
       discarded.forEach((n) => params.append('discarded', n));
 
-      await httpClient.put(`/loan/return/${searchedLoan.id}?${params.toString()}`, null);
+      
+      await httpClient.put(`/loan/return/${searchedLoan.id}`, null, { params });
 
       setSuccess('Devolución procesada con éxito. El préstamo ahora puede ser pagado si corresponde.');
       const { data } = await getLoanById(searchedLoan.id);

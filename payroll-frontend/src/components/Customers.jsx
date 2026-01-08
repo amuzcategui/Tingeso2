@@ -114,7 +114,6 @@ const Customers = () => {
             <th>Teléfono</th>
             <th>Nº Préstamos</th>
             <th>Estado</th>
-            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
