@@ -35,7 +35,8 @@ public class UserService {
         }
 
         // 1) si existe, devolverlo
-        Map<String, Object> existing = tryGetCustomer(rut);
+        Map<String, Object> existing = tryGetCustomer(rut, jwt);
+
         if (existing != null) return existing;
 
         // 2) si no existe, crearlo con Map (sin DTO)
@@ -85,20 +86,69 @@ public class UserService {
         }
     }
 
+    private HttpHeaders authHeaders(Jwt jwt) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(jwt.getTokenValue());
+        return headers;
+    }
+
     @SuppressWarnings("unchecked")
-    private Map<String, Object> tryGetCustomer(String rut) {
+    private Map<String, Object> tryGetCustomer(String rut, Jwt jwt) {
         try {
-            ResponseEntity<Map> resp = restTemplate.getForEntity(CUST_GET_BY_RUT, Map.class, rut);
+            HttpEntity<Void> req = new HttpEntity<>(authHeaders(jwt));
+            ResponseEntity<Map> resp = restTemplate.exchange(
+                    CUST_GET_BY_RUT,
+                    HttpMethod.GET,
+                    req,
+                    Map.class,
+                    rut
+            );
+
             if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
                 return (Map<String, Object>) resp.getBody();
             }
             return null;
+
         } catch (HttpClientErrorException.NotFound e) {
             return null;
+        } catch (HttpClientErrorException.Unauthorized | HttpClientErrorException.Forbidden e) {
+            throw new RuntimeException("customer-service rechazó el token (401/403). Revisa roles/audience/issuer.", e);
         } catch (Exception e) {
             throw new RuntimeException("No se pudo consultar customer-service (GET /customer/{rut})", e);
         }
     }
+
+    private Map<String, Object> createCustomerFromJwt(Jwt jwt) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("rut",     jwt.getClaimAsString("preferred_username"));
+        body.put("name",    jwt.getClaimAsString("name"));
+        body.put("email",   jwt.getClaimAsString("email"));
+        body.put("phone",   jwt.getClaimAsString("phone_number"));
+        body.put("address", jwt.getClaimAsString("address"));
+
+        try {
+            HttpEntity<Map<String, Object>> req = new HttpEntity<>(body, authHeaders(jwt));
+            ResponseEntity<Map> created = restTemplate.exchange(
+                    CUST_CREATE,
+                    HttpMethod.POST,
+                    req,
+                    Map.class
+            );
+
+            if (created.getStatusCode().is2xxSuccessful() && created.getBody() != null) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> out = (Map<String, Object>) created.getBody();
+                return out;
+            }
+            throw new RuntimeException("Respuesta no exitosa desde customer-service al crear customer: " + created.getStatusCode());
+
+        } catch (Exception e) {
+            throw new RuntimeException("No se pudo crear customer en customer-service", e);
+        }
+    }
+
+
 
     private boolean hasRole(Jwt jwt, String role) {
         Object realmAccessObj = jwt.getClaims().get("realm_access");
