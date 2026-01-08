@@ -19,6 +19,7 @@ public class ToolController {
 
     // ------------------ RF1.1 Registrar nuevas herramientas ------------------
     // rutPerson: rut de quien realiza la operación (lo validas en el front)
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PostMapping("/save")
     public ResponseEntity<?> createTool(
             @RequestBody ToolEntity tool,
@@ -32,6 +33,7 @@ public class ToolController {
     }
 
     // ------------------ RF1.2 Dar de baja herramientas ------------------
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/{idTool}/deactivate")
     public ResponseEntity<?> deactivateTool(
             @PathVariable Long idTool,
@@ -46,6 +48,7 @@ public class ToolController {
     }
 
     // ------------------ Préstamo ------------------
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @PutMapping("/{idTool}/loan")
     public ResponseEntity<?> loanTool(
             @PathVariable Long idTool,
@@ -60,6 +63,7 @@ public class ToolController {
     }
 
     // ------------------ Reparación ------------------
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/{idTool}/repair")
     public ResponseEntity<?> repairTool(
             @PathVariable Long idTool,
@@ -74,6 +78,7 @@ public class ToolController {
     }
 
     // ------------------ Volver a Disponible (devolución / reingreso) ------------------
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/{idTool}/available")
     public ResponseEntity<?> availableTool(
             @PathVariable Long idTool,
@@ -88,6 +93,7 @@ public class ToolController {
     }
 
     // ------------------ GET por ID (lo usa pricing-service para leer toolValue/rentalFee) ------------------
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/{idTool}")
     public ResponseEntity<?> getToolById(@PathVariable Long idTool) {
         try {
@@ -101,6 +107,7 @@ public class ToolController {
     // Sin DTO: recibimos JSON simple (Map)
 
     // Body esperado: { "toolValue": 12345 }
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/{idTool}/pricing/value")
     public ResponseEntity<?> updateToolValue(
             @PathVariable Long idTool,

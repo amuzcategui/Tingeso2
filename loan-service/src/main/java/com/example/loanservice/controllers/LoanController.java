@@ -5,6 +5,7 @@ import com.example.loanservice.repositories.LoanRepository;
 import com.example.loanservice.services.LoanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -23,6 +24,7 @@ public class LoanController {
     @Autowired
     private LoanRepository loanRepository;
 
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @PostMapping("/create")
     public ResponseEntity<?> createLoan(@RequestBody LoanEntity loan) {
         try {
@@ -39,6 +41,7 @@ public class LoanController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/return/{idLoan}")
     public ResponseEntity<?> returnTools(
             @PathVariable long idLoan,
@@ -62,6 +65,7 @@ public class LoanController {
     }
 
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/{idLoan}/pay")
     public ResponseEntity<?> payLoan(@PathVariable long idLoan) {
         try {
@@ -72,6 +76,7 @@ public class LoanController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @GetMapping("/my-loans")
     public ResponseEntity<?> getMyLoans(@RequestParam String rut) {
         try {
@@ -83,6 +88,7 @@ public class LoanController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/all-loans")
     public ResponseEntity<?> getAllLoans() {
         try {
@@ -92,6 +98,7 @@ public class LoanController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/{idLoan}")
     public ResponseEntity<?> getLoanById(@PathVariable long idLoan) {
         try {
@@ -104,6 +111,7 @@ public class LoanController {
     }
     //PARA EL REPORTING
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/active/current")
     public ResponseEntity<?> currentActiveLoans() {
         try {
@@ -117,6 +125,7 @@ public class LoanController {
 
     // RF6.1: préstamos activos agrupados (vigentes/atrasos)
     // filtros opcionales: from/to (por startDate)
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/active/grouped")
     public ResponseEntity<?> activeLoansGrouped(
             @RequestParam(required = false) String from,
@@ -134,6 +143,7 @@ public class LoanController {
     }
 
     // RF6.2: loans activos atrasados (reporting obtiene ruts desde acá)
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/active/overdue")
     public ResponseEntity<?> overdueActiveLoans(
             @RequestParam(required = false) String from,

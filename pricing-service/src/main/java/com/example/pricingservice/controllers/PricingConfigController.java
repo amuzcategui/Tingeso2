@@ -4,6 +4,7 @@ import com.example.pricingservice.entities.PricingConfigEntity;
 import com.example.pricingservice.services.PricingConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -16,6 +17,7 @@ public class PricingConfigController {
     @Autowired
     private PricingConfigService pricingService;
 
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @GetMapping("/config")
     public ResponseEntity<?> getConfig() {
         try {
@@ -26,6 +28,7 @@ public class PricingConfigController {
     }
 
     // ✅ Devuelve SOLO el número (double)
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @GetMapping("/rental-fee-daily")
     public ResponseEntity<?> getRentalFeeDaily() {
         try {
@@ -36,6 +39,7 @@ public class PricingConfigController {
     }
 
     // body: { "rentalFeeDaily": 5000 }
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/config/rental-fee-daily")
     public ResponseEntity<?> updateRentalFeeDaily(@RequestBody Map<String, Object> body) {
         try {
@@ -52,6 +56,7 @@ public class PricingConfigController {
 
     // RF4.3: actualizar valor reposición por tool (inventory-service)
     // body: { "toolValue": 15000 }
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/tools/{idTool}/value")
     public ResponseEntity<?> updateToolValue(@PathVariable Long idTool, @RequestBody Map<String, Object> body) {
         try {

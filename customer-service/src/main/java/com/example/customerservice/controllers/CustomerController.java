@@ -29,6 +29,7 @@ public class CustomerController {
 
     // 1) Crear cliente
     // POST /api/v1/customer
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PostMapping
     public ResponseEntity<?> createCustomer(@RequestBody CustomerEntity customer) {
         try {
@@ -41,6 +42,7 @@ public class CustomerController {
 
     // 2) Obtener por RUT
     // GET /api/v1/customer/{rut}
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/{rut}")
     public ResponseEntity<?> getByRut(@PathVariable String rut) {
         try {
@@ -53,6 +55,7 @@ public class CustomerController {
 
     // 3) Listar todos
     // GET /api/v1/customer
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<CustomerEntity>> getAll() {
         return ResponseEntity.ok(customerService.findAll());
@@ -61,6 +64,7 @@ public class CustomerController {
     // 4) Cambiar status
     // PUT /api/v1/customer/{rut}/status?status=Activo
     // PUT /api/v1/customer/{rut}/status?status=Restringido
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/{rut}/status")
     public ResponseEntity<?> updateStatus(@PathVariable String rut,
                                           @RequestParam String status) {
@@ -84,6 +88,7 @@ public class CustomerController {
 
     // NO SE SI DEJAN ACÁ
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/findCustomer")
 
     public ResponseEntity<?> findByRut(@RequestParam String rut) {
@@ -111,6 +116,7 @@ public class CustomerController {
     // 6) Actualizar cantidad de préstamos (delta)
 // PUT /api/v1/customer/{rut}/loans?delta=1
 // PUT /api/v1/customer/{rut}/loans?delta=-1
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/{rut}/loans")
     public ResponseEntity<?> updateLoans(@PathVariable String rut, @RequestParam int delta) {
         try {
@@ -123,6 +129,7 @@ public class CustomerController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/all")
     public ResponseEntity<?> getAllCustomers() {
         try {

@@ -6,6 +6,7 @@ import com.example.kardexservice.services.KardexService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -24,6 +25,7 @@ public class KardexController {
 
     // ✅ ESTE endpoint lo usa inventory-service:
     // POST http://kardex-service/api/v1/kardex/movements
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @PostMapping("/movements")
     public ResponseEntity<?> createMovement(@RequestBody KardexEntity movement) {
         try {
@@ -34,6 +36,7 @@ public class KardexController {
     }
 
     // RF5.2: History by tool (consulta simple)
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/tool-history")
     public ResponseEntity<?> toolHistory(@RequestParam String toolName) {
         try {
@@ -47,6 +50,7 @@ public class KardexController {
     }
 
     // RF5.3: Movements by range (consulta simple)
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/range")
     public ResponseEntity<?> movementsInRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -65,6 +69,7 @@ public class KardexController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/all")
     public ResponseEntity<?> allKardex() {
         try {
